@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 import torch_geometric
 import torch_geometric.transforms as T
 
-from ogb.linkproppred import PygLinkPropPredDataset, Evaluator
+# from ogb.linkproppred import PygLinkPropPredDataset, Evaluator
 from ogb.nodeproppred import PygNodePropPredDataset, Evaluator
 from encoder import GCN, TAGC, SGC, GCNWithAttention, SGCwithJK, SAGEwithJK,  GCN, SGCRes
 from decoder import LinkPredictor, DotPredictor, MLPCatPredictor, MLPDotPredictor, MLPBilPredictor, BilinearPredictor, InteractionNetPredictor
@@ -26,7 +26,7 @@ def train_edge(model, predictor, data, split_edge, optimizer, batch_size):
 
     pos_train_edge = split_edge['train']['edge'].to(data.x.device)
 
-    neg_train_edge = split_edge['train']['edge_neg'].to(data.x.device) 
+    neg_train_edge = split_edge['train']['edge_neg'].to(data.x.device)
 
     total_loss = total_examples = 0
     for perm in DataLoader(range(pos_train_edge.size(0)), batch_size,

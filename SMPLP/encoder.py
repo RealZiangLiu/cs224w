@@ -104,12 +104,12 @@ class SGCRes(torch.nn.Module):
         #     self.node_embeddings.append(torch.nn.Linear(first_channels, second_channels))
         self.convs = torch.nn.ModuleList()
         self.convs.append(
-            SGConv(in_channels, hidden_channels, self.K))
-        for _ in range(num_layers - 2):
-            self.convs.append(
-                SGConv(hidden_channels, hidden_channels, self.K))
-        self.convs.append(
-            SGConv(hidden_channels, out_channels, self.K))
+            SGConv(in_channels, out_channels, self.K))
+        # for _ in range(num_layers - 2):
+        #     self.convs.append(
+        #         SGConv(hidden_channels, hidden_channels, self.K))
+        # self.convs.append(
+        #     SGConv(hidden_channels, out_channels, self.K))
         # self.lins = torch.nn.ModuleList()
         # self.lins.append(nn.Linear(hidden_channels, hidden_channels))
         # for _ in range(num_layers - 2):
@@ -134,10 +134,10 @@ class SGCRes(torch.nn.Module):
         #     x = self.node_embeddings[i](x)
         #     x = self.activation(x)
         # x_res = x
-        for i in range(len(self.convs[:-1])):
-            x = self.convs[i](x, adj_t)# + self.lins[i](x_res)
-            x = self.activation(x)
-            x = F.dropout(x, p=self.dropout, training=self.training)
+        # for i in range(len(self.convs[:-1])):
+        #     x = self.convs[i](x, adj_t)# + self.lins[i](x_res)
+        #     x = self.activation(x)
+        #     x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.convs[-1](x, adj_t)# + self.lins[-1](x_res)
         return x.log_softmax(dim=-1) if self.node_pred else torch.sigmoid(x)
 
