@@ -1,0 +1,137 @@
+{
+    "os": "Linux-5.4.0-144-generic-x86_64-with-glibc2.17",
+    "python": "3.8.16",
+    "heartbeatAt": "2023-03-17T06:19:48.543534",
+    "startedAt": "2023-03-17T06:19:48.208490",
+    "docker": null,
+    "cuda": "10.2.89",
+    "args": [
+        "--hidden_channels=16",
+        "--device=0",
+        "--lr=1e-4",
+        "--num_layers=2",
+        "--epochs=80",
+        "--runs",
+        "1",
+        "--encoder=sgc",
+        "--decoder=inet",
+        "--experiment_name",
+        "test_sgc"
+    ],
+    "state": "running",
+    "program": "gnn.py",
+    "codePath": "gnn.py",
+    "git": {
+        "remote": "git@github.com:KingsleyHsu/SMPLP.git",
+        "commit": "ae5a16c467b73d5e27b90095faa9ed958cde3a2d"
+    },
+    "email": "ziang_liu@outlook.com",
+    "root": "/home/ziang/Workspace/Github/SMPLP",
+    "host": "t7-ubuntu",
+    "username": "ziang",
+    "executable": "/home/ziang/anaconda3/envs/pyg/bin/python",
+    "cpu_count": 8,
+    "cpu_count_logical": 16,
+    "cpu_freq": {
+        "current": 3909.6933750000007,
+        "min": 0.0,
+        "max": 0.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 3556.776,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 4239.693,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3933.5,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 4362.561,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3655.46,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 4179.319,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 4255.788,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3734.188,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3570.057,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 4420.602,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3711.715,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3896.042,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3127.567,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3993.588,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3511.374,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 4406.864,
+            "min": 0.0,
+            "max": 0.0
+        }
+    ],
+    "disk": {
+        "total": 491.0866012573242,
+        "used": 443.68851470947266
+    },
+    "gpu": "NVIDIA GeForce RTX 2080 SUPER",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA GeForce RTX 2080 SUPER",
+            "memory_total": 8589934592
+        }
+    ],
+    "memory": {
+        "total": 31.36721420288086
+    }
+}
