@@ -13,6 +13,7 @@ import torch_geometric.transforms as T
 
 # from ogb.linkproppred import PygLinkPropPredDataset, Evaluator
 from ogb.nodeproppred import PygNodePropPredDataset, Evaluator
+
 from encoder import GCN, TAGC, SGC, GCNWithAttention, SGCwithJK, SAGEwithJK,  GCN, SGCRes
 from decoder import LinkPredictor, DotPredictor, MLPCatPredictor, MLPDotPredictor, MLPBilPredictor, BilinearPredictor, InteractionNetPredictor
 from logger import Logger
@@ -68,17 +69,20 @@ def train_node(model, predictor, data, split_node, optimizer, batch_size):
 
     train_idx = split_node['train'].to(data.x.device)
 
+    criterion = torch.nn.BCEWithLogitsLoss()
+
     total_loss = total_examples = 0
     for perm in DataLoader(range(train_idx.size(0)), batch_size,
                            shuffle=True):
 
         optimizer.zero_grad()
 
-        out = model(data.x, data.adj_t)[train_idx]
+        out = model(data.x, data.adj_t)[train_idx[perm]]
 
         # out = predictor(h)
 
-        loss = F.nll_loss(out, data.y.squeeze(1)[train_idx])
+        # loss = F.nll_loss(out.log_softmax(dim=-1), data.y.squeeze(1)[train_idx])
+        loss = criterion(out, data.y[train_idx[perm]].to(torch.float))
 
         loss.backward()
 
@@ -228,14 +232,24 @@ def main():
     device = f'cuda:{args.device}' if torch.cuda.is_available() else 'cpu'
     device = torch.device(device)
 
-    if "ogbn" in args.data_name:
+    if "ogbn-arxiv" in args.data_name:
         dataset = PygNodePropPredDataset(name=args.data_name,
                                          transform=T.ToSparseTensor())
+        data = dataset[0]
+        data.adj_t = data.adj_t.to_symmetric()
+    elif "ogbn-proteins" in args.data_name:
+        dataset = PygNodePropPredDataset(
+        name='ogbn-proteins', transform=T.ToSparseTensor(attr='edge_attr'))
+        data = dataset[0]
+        # Move edge features to node features.
+        data.x = data.adj_t.mean(dim=1)
+        data.adj_t.set_value_(None)
+        data.adj_t = data.adj_t.to_symmetric()
     elif "ogbl" in args.data_name:
         dataset = PygLinkPropPredDataset(args.data_name,
                                         transform=T.ToSparseTensor())
-    data = dataset[0]
-    data.adj_t = data.adj_t.to_symmetric()
+        data = dataset[0]
+        data.adj_t = data.adj_t.to_symmetric()
 
     # # normalize x,y,z coordinates  
     # data.x[:, 0] = torch.nn.functional.normalize(data.x[:, 0], dim=0)
@@ -258,7 +272,7 @@ def main():
     with open(log_file, 'a') as f:
         f.write(str(args) + '\n')
 
-    out_channel = args.hidden_channels if "ogbl" in args.data_name else dataset.num_classes
+    out_channel = args.hidden_channels if "ogbl" in args.data_name else args.hidden_channels # dataset.num_classes
     if args.encoder_name.lower() == 'sage':
         model = SAGE(data.num_features, args.hidden_channels,
                      out_channel, args.num_layers,

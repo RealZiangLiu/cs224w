@@ -96,50 +96,70 @@ class SGCRes(torch.nn.Module):
         super(SGCRes, self).__init__()
 
         self.K = K
-        # self.node_embeddings = torch.nn.ModuleList()
-        # # node embeddings
-        # for i in range(num_layers):
-        #     first_channels = in_channels if i == 0 else hidden_channels
-        #     second_channels = hidden_channels
-        #     self.node_embeddings.append(torch.nn.Linear(first_channels, second_channels))
+        self.node_embeddings = torch.nn.ModuleList()
+        # node embeddings
+        for i in range(num_layers):
+            first_channels = in_channels if i == 0 else hidden_channels
+            second_channels = hidden_channels
+            self.node_embeddings.append(torch.nn.Linear(first_channels, second_channels))
         self.convs = torch.nn.ModuleList()
         self.convs.append(
-            SGConv(in_channels, out_channels, self.K))
-        # for _ in range(num_layers - 2):
-        #     self.convs.append(
-        #         SGConv(hidden_channels, hidden_channels, self.K))
-        # self.convs.append(
-        #     SGConv(hidden_channels, out_channels, self.K))
-        # self.lins = torch.nn.ModuleList()
-        # self.lins.append(nn.Linear(hidden_channels, hidden_channels))
-        # for _ in range(num_layers - 2):
-        #     self.lins.append(nn.Linear(hidden_channels, hidden_channels))
-        # self.lins.append(nn.Linear(hidden_channels, out_channels))
+            SGConv(in_channels, hidden_channels, self.K))
+        for _ in range(num_layers - 2):
+            self.convs.append(
+                SGConv(hidden_channels, hidden_channels, self.K))
+        self.convs.append(
+            SGConv(hidden_channels, out_channels, self.K))
+        self.lins = torch.nn.ModuleList()
+        self.lins.append(nn.Linear(hidden_channels, hidden_channels))
+        for _ in range(num_layers - 2):
+            self.lins.append(nn.Linear(hidden_channels, hidden_channels))
+        self.lins.append(nn.Linear(hidden_channels, out_channels))
 
-        self.activation = nn.ReLU()
+        self.lins_dec = torch.nn.ModuleList()
+        self.lins_dec.append(nn.Linear(out_channels, hidden_channels))
+        for _ in range(2):
+            self.lins_dec.append(nn.Linear(hidden_channels, hidden_channels))
+        self.lins_dec.append(nn.Linear(hidden_channels, out_channels))
+
+        self.activation = nn.LeakyReLU()
 
         self.node_pred = node_pred
+
+        self.jk = JumpingKnowledge(mode='max', channels=hidden_channels, num_layers=num_layers)
 
         self.dropout = dropout
 
     def reset_parameters(self):
         for conv in self.convs:
             conv.reset_parameters()
-        # for lin in self.lins:
-        #     lin.reset_parameters()
+        for lin in self.lins:
+            lin.reset_parameters()
 
     def forward(self, x, adj_t):
         # node embedding
-        # for i in range(len(self.node_embeddings)):
-        #     x = self.node_embeddings[i](x)
-        #     x = self.activation(x)
-        # x_res = x
-        # for i in range(len(self.convs[:-1])):
-        #     x = self.convs[i](x, adj_t)# + self.lins[i](x_res)
-        #     x = self.activation(x)
-        #     x = F.dropout(x, p=self.dropout, training=self.training)
-        x = self.convs[-1](x, adj_t)# + self.lins[-1](x_res)
-        return x.log_softmax(dim=-1) if self.node_pred else torch.sigmoid(x)
+        for i in range(len(self.node_embeddings)):
+            x = self.node_embeddings[i](x)
+            x = self.activation(x)
+            x = F.dropout(x, p=self.dropout, training=self.training)
+        out_list = []
+        for i in range(len(self.convs[:-1])):
+            x_res = x
+            x = self.convs[i](x, adj_t) + self.lins[i](x_res)
+            x = self.activation(x)
+            x = F.dropout(x, p=self.dropout, training=self.training)
+            out_list += [x]
+        x_res = x
+        x = self.convs[-1](x, adj_t) + self.lins[-1](x_res)
+        out_list += [x]
+        x = self.jk(out_list)
+        # decoding
+        for i in range(len(self.lins_dec[:-1])):
+            x = self.lins_dec[i](x)
+            x = self.activation(x)
+            x = F.dropout(x, p=self.dropout, training=self.training)
+        x = self.lins_dec[-1](x)
+        return x if self.node_pred else torch.sigmoid(x)
 
 class SGCOfficial(torch.nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels, num_layers,
